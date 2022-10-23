@@ -1,0 +1,1 @@
+Git won't upload otherwise, and the build script throws an error if the dir is missing
