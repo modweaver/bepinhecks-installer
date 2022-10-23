@@ -178,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void startInstall() async {
     stdout.writeln("Starting BepInHecks Install");
-    await pullLatestReleaseGH("BepInEx/BepInEx", "bepinhecks_zip");
+    await pullLatestReleaseGH("cobwebsh/BepInEx", "bepinhecks_zip");
     bool bepinexInstalled = await isBepinexPresent();
     if (bepinexInstalled) {
       stdout.writeln("BepInEx detected! Backing up plugins folder");
