@@ -61,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String installLoc = "unselected";
   String dirText = "Please locate your SpiderHeck installation folder";
   String logText = "";
+  String targetVersion = "latest";
 
   Future<void> copyPath(String from, String to) async {
     await Directory(to).create(recursive: true);
@@ -110,8 +111,14 @@ class _MyHomePageState extends State<MyHomePage> {
     changeText();
   }
 
-  Future<void> pullLatestReleaseGH(String repo, String outDir) async {
-    String apiQuery = "https://api.github.com/repos/$repo/releases/latest";
+  Future<void> pullLatestReleaseGH(String repo, String outDir,
+      {String version = "latest"}) async {
+    String apiQuery = "";
+    if (version == "latest") {
+      apiQuery = "https://api.github.com/repos/$repo/releases/latest";
+    } else {
+      apiQuery = "https://api.github.com/repos/$repo/releases/tags/$version";
+    }
     Map<String, String> headers = HashMap();
     headers.putIfAbsent('Accept', () => 'application/json');
 
@@ -193,7 +200,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void startInstall() async {
     addLog("Starting BepInHecks Install");
     await clearGeneratedFolders("bepinhecks_zip", "plugins_backup");
-    await pullLatestReleaseGH("cobwebsh/BepInEx", "bepinhecks_zip");
+    await pullLatestReleaseGH(
+        "sbcomputertech/UncategorisedProjects", "bepinhecks_zip",
+        version: targetVersion);
     bool bepinexInstalled = await isBepinexPresent();
     if (bepinexInstalled) {
       addLog("BepInEx detected! Backing up plugins folder");
@@ -227,6 +236,10 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!await launchUrl(steamUri)) {
       addLog("Error launching SpiderHeck through steam");
     }
+  }
+
+  void setTargetVersion(String version) {
+    targetVersion = version != "" ? version : "latest";
   }
 
   @override
@@ -266,6 +279,17 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               dirText,
               style: const TextStyle(fontSize: 20.0),
+            ),
+            const Text(" "),
+            SizedBox(
+              width: 275,
+              child: TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'BepInHecks version (default: latest)',
+                ),
+                onChanged: setTargetVersion,
+              ),
             ),
             ButtonBar(
               mainAxisSize: MainAxisSize.min,
