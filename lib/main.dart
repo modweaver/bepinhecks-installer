@@ -62,6 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String dirText = "Please locate your SpiderHeck installation folder";
   String logText = "";
   String targetVersion = "latest";
+  String psaText =
+      "Info: BepInHecks only works with the Steam/Epic versions of the games, and the launch button only works with Steam";
 
   Future<void> copyPath(String from, String to) async {
     await Directory(to).create(recursive: true);
@@ -214,7 +216,7 @@ class _MyHomePageState extends State<MyHomePage> {
       await restorePlugins();
     }
     addLog("Finished install!");
-    addLog("Click the button to launch the game (Windows)");
+    addLog("Click the button to launch the game");
   }
 
   void changeText() {
@@ -275,6 +277,8 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(psaText),
+            const Text("\n\n"),
             Text(
               dirText,
               style: const TextStyle(fontSize: 20.0),
