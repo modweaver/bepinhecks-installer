@@ -178,8 +178,20 @@ class _MyHomePageState extends State<MyHomePage> {
     await copyPath(backup.path, plugins.path);
   }
 
+  Future<void> clearGeneratedFolders(String dlDir, String pluginbacDir) async {
+    Directory downloadDir = Directory(dlDir);
+    Directory plbacDir = Directory(pluginbacDir);
+    if (downloadDir.existsSync()) {
+      downloadDir.deleteSync(recursive: true);
+    }
+    if (plbacDir.existsSync()) {
+      plbacDir.deleteSync(recursive: true);
+    }
+  }
+
   void startInstall() async {
     addLog("Starting BepInHecks Install");
+    await clearGeneratedFolders("bepinhecks_zip", "plugins_backup");
     await pullLatestReleaseGH("cobwebsh/BepInEx", "bepinhecks_zip");
     bool bepinexInstalled = await isBepinexPresent();
     if (bepinexInstalled) {
