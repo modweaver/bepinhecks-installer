@@ -8,6 +8,7 @@ import 'package:http/http.dart' as Http;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -222,12 +223,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> openGameFolder() async {
     addLog("Starting game...");
-    if (Platform.isWindows) {
-      await Process.run("$installLoc\\SpiderHeckApp.exe", []);
-      addLog("Game exe started. Exiting installer");
-      exit(0);
-    } else {
-      addLog("Launcher only implemented on Windows");
+    final Uri steamUri = Uri.parse("steam://rungameid/1329500");
+    if (!await launchUrl(steamUri)) {
+      addLog("Error launching SpiderHeck through steam");
     }
   }
 
