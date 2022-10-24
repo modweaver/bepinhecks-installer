@@ -180,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void startInstall() async {
     addLog("Starting BepInHecks Install");
-    await pullLatestReleaseGH("bepinex/BepInEx", "bepinhecks_zip");
+    await pullLatestReleaseGH("cobwebsh/BepInEx", "bepinhecks_zip");
     bool bepinexInstalled = await isBepinexPresent();
     if (bepinexInstalled) {
       addLog("BepInEx detected! Backing up plugins folder");
@@ -193,6 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
       await restorePlugins();
     }
     addLog("Finished install!");
+    addLog("Click the button to launch the game (Windows)");
   }
 
   void changeText() {
@@ -205,6 +206,17 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       logText = "$logText\n$log";
     });
+  }
+
+  Future<void> openGameFolder() async {
+    addLog("Starting game...");
+    if (Platform.isWindows) {
+      await Process.run("$installLoc\\SpiderHeckApp.exe", []);
+      addLog("Game exe started. Exiting installer");
+      exit(0);
+    } else {
+      addLog("Launcher only implemented on Windows");
+    }
   }
 
   @override
@@ -243,11 +255,34 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Text(
               dirText,
+              style: const TextStyle(fontSize: 20.0),
             ),
-            TextButton(
-                onPressed: openFilePicker, child: const Text('Locate...')),
-            TextButton(
-                onPressed: startInstall, child: const Text('Install...')),
+            ButtonBar(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OutlinedButton(
+                  onPressed: openFilePicker,
+                  child: const Text(
+                    "Locate...",
+                    style: TextStyle(fontSize: 20.0),
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: startInstall,
+                  child: const Text(
+                    "Install",
+                    style: TextStyle(fontSize: 20.0),
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: openGameFolder,
+                  child: const Text(
+                    "Open",
+                    style: TextStyle(fontSize: 20.0),
+                  ),
+                ),
+              ],
+            ),
             Text(logText),
           ],
         ),
