@@ -59,6 +59,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String installLoc = "unselected";
   String dirText = "Please locate your SpiderHeck installation folder";
+  String logText = "";
 
   Future<void> copyPath(String from, String to) async {
     await Directory(to).create(recursive: true);
@@ -98,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (selectedDirectory == null) {
       installLoc = "unselected";
     } else {
+      addLog("Validating install: $selectedDirectory");
       if (validateInstallLoc(selectedDirectory)) {
         installLoc = selectedDirectory;
       } else {
@@ -105,7 +107,6 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
     changeText();
-    stdout.writeln("Install directory: $installLoc");
   }
 
   Future<void> pullLatestReleaseGH(String repo, String outDir) async {
@@ -118,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
     String jsonText = response.body;
     final json = jsonDecode(jsonText);
     String releaseAssetUrl = json["assets"][0]["browser_download_url"];
-    stdout.writeln("Asset download: $releaseAssetUrl");
+    addLog("Asset download: $releaseAssetUrl");
 
     Http.Response assetRaw = await Http.get(Uri.parse(releaseAssetUrl));
     final dlBytes = assetRaw.bodyBytes;
@@ -136,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Directory('$zipOutDir/$filename').create(recursive: true);
       }
     }
-    stdout.writeln("Extracted archive");
+    addLog("Extracted archive");
   }
 
   Future<void> backupPlugins() async {
@@ -169,6 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> restorePlugins() async {
+    addLog("Restoring plugins");
     String pluginsDir = "$installLoc/BepInEx/plugins";
     Directory plugins = Directory(pluginsDir);
     Directory backup = Directory("plugins_backup");
@@ -177,24 +179,31 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void startInstall() async {
-    stdout.writeln("Starting BepInHecks Install");
-    await pullLatestReleaseGH("cobwebsh/BepInEx", "bepinhecks_zip");
+    addLog("Starting BepInHecks Install");
+    await pullLatestReleaseGH("bepinex/BepInEx", "bepinhecks_zip");
     bool bepinexInstalled = await isBepinexPresent();
     if (bepinexInstalled) {
-      stdout.writeln("BepInEx detected! Backing up plugins folder");
+      addLog("BepInEx detected! Backing up plugins folder");
       await backupPlugins();
-      stdout.writeln("Uninstalling old version of bepinex");
+      addLog("Uninstalling old version of bepinex");
       await uninstallBepinex();
     }
     await copyPath("bepinhecks_zip", installLoc);
     if (bepinexInstalled) {
       await restorePlugins();
     }
+    addLog("Finished install!");
   }
 
   void changeText() {
     setState(() {
       dirText = "SpiderHeck install: $installLoc";
+    });
+  }
+
+  void addLog(String log) {
+    setState(() {
+      logText = "$logText\n$log";
     });
   }
 
@@ -239,6 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: openFilePicker, child: const Text('Locate...')),
             TextButton(
                 onPressed: startInstall, child: const Text('Install...')),
+            Text(logText),
           ],
         ),
       ),
