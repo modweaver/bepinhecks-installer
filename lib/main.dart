@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String logText = "";
   String targetVersion = "latest";
   String psaText =
-      "Info: BepInHecks only works with the Steam/Epic versions of the games, and the launch button only works with Steam";
+      "Info: BepInHecks only works with the Steam/Epic versions of the games, and the launch button only works with Steam\nPut mod DLL files in: [game folder]/BepInEx/plugins";
 
   Future<void> copyPath(String from, String to) async {
     await Directory(to).create(recursive: true);
