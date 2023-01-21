@@ -85,14 +85,11 @@ class _MyHomePageState extends State<MyHomePage> {
     String exe2;
     if (Platform.isWindows) {
       exe1 = "$path\\SpiderHeckApp.exe";
-      exe2 = "$path\\SPIDERHECK.exe";
     } else {
       exe1 = "$path/SpiderHeckApp.exe";
-      exe2 = "$path/SPIDERHECK.exe";
     }
 
     if (!File(exe1).existsSync()) valid = false;
-    if (!File(exe2).existsSync()) valid = false;
 
     return valid;
   }
