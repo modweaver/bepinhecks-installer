@@ -84,8 +84,10 @@ class _MyHomePageState extends State<MyHomePage> {
       addLog("Validating install: $selectedDirectory");
       if (validateInstallLoc(selectedDirectory)) {
         installLoc = selectedDirectory;
+        addLog("Install valid!");
       } else {
         installLoc = "invalid";
+        addLog("Install invalid!");
       }
     }
     changeText();
@@ -279,6 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ],),
+              const Divider(thickness: 2, height: 50,),
             Text(logText, textAlign: TextAlign.center,),
           ],
         ),
