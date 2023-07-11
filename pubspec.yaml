@@ -40,6 +40,7 @@ dependencies:
   http: ^0.13.5
   archive: ^3.3.2
   url_launcher: ^6.1.6
+  desktop_drop: ^0.4.1
 
 dev_dependencies:
   flutter_test:

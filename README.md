@@ -19,4 +19,6 @@
 
 6. You can use the `Launch` button to start the game, if you have it on Steam. Otherwise, launch it as normal
 
-7. If you want to remove all mods and BepInHecks, click the `Uninstall` button at the bottom.
+7. To install mods, add them to the `<game folder>/BepInHecks/plugins` directory. If the mod comes as a .zip file, you will have to extract it first. You can also drag-and-drop DLL and ZIP files into the installer window to add them, as long as the game path is configured.
+
+8. If you want to remove all mods and BepInHecks, click the `Uninstall` button at the bottom.

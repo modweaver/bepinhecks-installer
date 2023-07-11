@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import "package:win32/win32.dart" as Win32;
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 
 void main() {
   runApp(const MyApp());
@@ -264,6 +265,49 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> handleFileDrop(DropDoneDetails details) async {
+    if(installLoc == "unselected") {
+      addLog("Can't drag and drop without selecting a path!");
+      return;
+    }
+
+    if(! await isBepinexPresent()) {
+      addLog("Can't drag and drop plugins without having BepInHecks installed!");
+      return;
+    }
+
+    for (var xfile in details.files) {
+      if(!xfile.path.endsWith(".dll") && !xfile.path.endsWith(".zip")) {
+        addLog("Only .zip and .dll files can be drag and dropped!");
+        return;
+      }
+
+      if(xfile.path.endsWith(".zip")) {
+        final archive = ZipDecoder().decodeBytes(await xfile.readAsBytes());
+        final outDir = p.join(installLoc, "BepInHecks", "plugins", xfile.name);
+
+        for (final file in archive) {
+          final filename = file.name;
+          if (file.isFile) {
+            final data = file.content as List<int>;
+            File('$outDir/$filename')
+              ..createSync(recursive: true)
+              ..writeAsBytesSync(data);
+          } else {
+            Directory('$outDir/$filename').create(recursive: true);
+          }
+        }
+
+        addLog("Added zipped mod to plugins folder");
+      } else { // must be a dll, so we can just copy
+        final fileName = p.basename(xfile.path);
+        final outPath = p.join(installLoc, "BepInHecks", "plugins",fileName);
+        await xfile.saveTo(outPath);
+        addLog("Added mod DLL to plugins folder");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const buttonPadding = MaterialStatePropertyAll(EdgeInsets.all(10));
@@ -295,80 +339,83 @@ class _MyHomePageState extends State<MyHomePage> {
           const Text("  "),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Text("\n\n"),
-            Text(psaText, textAlign: TextAlign.center,),
-            const Text("\n\n"),
-            Text(
-              dirText, textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20.0),
-            ),
-            const Divider(thickness: 2, height: 50,),
-            
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: openFilePicker,
-                  icon: const Icon(Icons.folder),
-                  label: const Text(
-                    "Locate...",
-                    style: TextStyle(fontSize: 20.0),
-                  ),
-                  style: const ButtonStyle(padding: buttonPadding),
-                ),
-                const Text("    "),
-                OutlinedButton.icon(
-                  onPressed: startInstall,
-                  icon: const Icon(Icons.download),
-                  label: const Text(
-                    "Install",
-                    style: TextStyle(fontSize: 20.0),
-                  ),
-                  style: const ButtonStyle(padding: buttonPadding),
-                ),
-                const Text("    "),
-                OutlinedButton.icon(
-                  onPressed: uninstallBepinex,
-                  icon: const Icon(Icons.delete),
-                  label: const Text(
-                    "Uninstall",
-                    style: TextStyle(fontSize: 20.0),
-                  ),
-                  style: const ButtonStyle(padding: buttonPadding),
-                ),
-                const Text("    "),
-                OutlinedButton.icon(
-                  onPressed: launchGameViaSteam,
-                  icon: const Icon(Icons.play_circle_outline),
-                  label: const Text(
-                    "Launch",
-                    style: TextStyle(fontSize: 20.0),
-                  ),
-                  style: const ButtonStyle(padding: buttonPadding),
-                ),
-              ],),
-              const Divider(thickness: 2, height: 50,),
-
-            Text(
-              logText, 
-              textAlign: TextAlign.left, 
-              style: const TextStyle(
-                // fontFamily: "Consolas",
-                fontSize: 16,
+      body: DropTarget(
+        onDragDone: handleFileDrop,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const Text("\n\n"),
+              Text(psaText, textAlign: TextAlign.center,),
+              const Text("\n\n"),
+              Text(
+                dirText, textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20.0),
               ),
-            ),
-            const Text(""),
-            OutlinedButton.icon(
-              onPressed: clearLog, 
-              icon: const Icon(Icons.clear), 
-              label: const Text("Clear log")
-            ),
-          ],
+              const Divider(thickness: 2, height: 50,),
+              
+      
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: openFilePicker,
+                    icon: const Icon(Icons.folder),
+                    label: const Text(
+                      "Locate...",
+                      style: TextStyle(fontSize: 20.0),
+                    ),
+                    style: const ButtonStyle(padding: buttonPadding),
+                  ),
+                  const Text("    "),
+                  OutlinedButton.icon(
+                    onPressed: startInstall,
+                    icon: const Icon(Icons.download),
+                    label: const Text(
+                      "Install",
+                      style: TextStyle(fontSize: 20.0),
+                    ),
+                    style: const ButtonStyle(padding: buttonPadding),
+                  ),
+                  const Text("    "),
+                  OutlinedButton.icon(
+                    onPressed: uninstallBepinex,
+                    icon: const Icon(Icons.delete),
+                    label: const Text(
+                      "Uninstall",
+                      style: TextStyle(fontSize: 20.0),
+                    ),
+                    style: const ButtonStyle(padding: buttonPadding),
+                  ),
+                  const Text("    "),
+                  OutlinedButton.icon(
+                    onPressed: launchGameViaSteam,
+                    icon: const Icon(Icons.play_circle_outline),
+                    label: const Text(
+                      "Launch",
+                      style: TextStyle(fontSize: 20.0),
+                    ),
+                    style: const ButtonStyle(padding: buttonPadding),
+                  ),
+                ],),
+                const Divider(thickness: 2, height: 50,),
+      
+              Text(
+                logText, 
+                textAlign: TextAlign.left, 
+                style: const TextStyle(
+                  // fontFamily: "Consolas",
+                  fontSize: 16,
+                ),
+              ),
+              const Text(""),
+              OutlinedButton.icon(
+                onPressed: clearLog, 
+                icon: const Icon(Icons.clear), 
+                label: const Text("Clear log")
+              ),
+            ],
+          ),
         ),
       ),
     );
