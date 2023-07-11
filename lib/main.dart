@@ -196,8 +196,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void addLog(String log) {
+    int logNum = logText.characters.where((c) => c == '\n').length + 1;
     setState(() {
-      logText = "$logText\n$log";
+      logText = "$logText\n$logNum|  $log";
     });
   }
   void clearLog() {
@@ -283,7 +284,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],),
               const Divider(thickness: 2, height: 50,),
-            Text(logText, textAlign: TextAlign.center,),
+
+            Text(
+              logText, 
+              textAlign: TextAlign.left, 
+              style: const TextStyle(
+                // fontFamily: "Consolas",
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
       ),
