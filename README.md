@@ -4,10 +4,19 @@
 ### PSA: Modding only works with the Steam, and Epic versions of the game. Xbox Game Pass & Windows Store versions are unsupported.
 
 ## How to use:
-- Download the installer from the [releases page](https://github.com/cobwebsh/bepinhecks-installer/releases/latest), and extract the zip file.
-- Run `bepinhecks_installer.exe`
-- Click the `Locate...` button and browse to the game installation folder. By default, this is `C:\Program Files(x86)\Steam\steamapps\common\SpiderHeck` on Windows.
-- If you selected the right path, it will show it above the buttons, otherwise it will say either `invalid` or `unselected`.
-- Click the `Install` button to download BepInHecks and install it to SpiderHeck.
-- If installation succeeded, you will see `Finished install!` appear in the window.
-- If you are using the Steam version of the game, you can click `Open` to launch it, otherwise start it as normal.
+
+1. Download the installer from the [releases page](https://github.com/cobwebsh/bepinhecks-installer/releases/latest), and extract the zip file. **This doesn't have to be in the game folder.**
+
+2. Run `bepinhecks_installer.exe`
+
+3. Select the game path
+    -  If you have the steam version of the game, and are on windows, the path should automatically be detected and shown in the window. 
+    - Otherwise, click on the locate button and browse to it. If it is correct, it should say `Install valid` at the bottom. If it says invalid, check you have the right path and try again.
+
+4. Click the `Install` button to download and install it. If it already detects mods installed, it will back up all of the plugins before updating BepInHecks.
+
+5. If installation succeeded, you will see `Finished install!` appear in the window.
+
+6. You can use the `Launch` button to start the game, if you have it on Steam. Otherwise, launch it as normal
+
+7. If you want to remove all mods and BepInHecks, click the `Uninstall` button at the bottom.
