@@ -9,6 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+// ignore: library_prefixes
+import "package:win32/win32.dart" as Win32;
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,6 +27,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BepInHecks Installer',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.amber,
       ),
@@ -78,6 +84,35 @@ class _MyHomePageState extends State<MyHomePage> {
   bool validateInstallLoc(String path) {
     String exe1 = p.join(path, "SpiderHeckApp.exe");
     return File(exe1).existsSync();
+  }
+
+  String? tryAutoDetectGamePath() {
+    if(!Platform.isWindows) {
+      addLog("Steam auto-detect is only supported on windows!");
+      return null;
+    }
+
+    final subKeyName = "SOFTWARE\\Valve\\Steam".toNativeUtf16();
+    final valueName = "SteamPath".toNativeUtf16();
+    final dataPointer = Win32.wsalloc(Win32.MAX_PATH);
+    final sizePointer = malloc<Win32.UINT32>();
+
+    final keyGetValueStatus = Win32.RegGetValue(Win32.HKEY_CURRENT_USER, subKeyName, valueName, Win32.RRF_RT_REG_SZ, nullptr, dataPointer, sizePointer);
+
+    if(keyGetValueStatus != 0) {
+      addLog("Steam auto-detect failed with registry error $keyGetValueStatus!");
+      return null;
+    }
+
+    final steamInstallPath = dataPointer.toDartString();
+    
+    malloc.free(subKeyName);
+    malloc.free(valueName);
+    malloc.free(dataPointer);
+    malloc.free(sizePointer);
+
+    final gameInstallPath = p.join(steamInstallPath, "steamapps", "common", "SpiderHeck");
+    return gameInstallPath;
   }
 
   void openFilePicker() async {
@@ -165,8 +200,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void startInstall() async {
-    clearLog();
-
     if(installLoc == "unselected") {
       addLog("You need to select the game install path! Click the locate button above");
       return;
@@ -220,11 +253,47 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    var detectedGamePath = tryAutoDetectGamePath();
+    if(detectedGamePath != null) {
+      installLoc = detectedGamePath;
+      updateInstallLocText();
+      addLog("Game install path was auto-detected!");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     const buttonPadding = MaterialStatePropertyAll(EdgeInsets.all(10));
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.title, textAlign: TextAlign.center,),
+        actions: [
+          IconButton(
+            onPressed: () => {
+              launchUrlString("https://github.com/cobwebsh/bepinhecks-installer/blob/main/README.md#how-to-use")
+            },
+            tooltip: "View the README",
+            icon: const Icon(Icons.help_outline)
+          ),
+          IconButton(
+            onPressed: () => {
+              launchUrlString("https://github.com/cobwebsh/bepinhecks-installer")
+            }, 
+            tooltip: "View the source code for this",
+            icon: const Icon(Icons.code)
+          ),
+          IconButton(
+            onPressed: () => {
+              launchUrlString("https://github.com/cobwebsh/BepInHecks")
+            }, 
+            tooltip: "Goto the BepInHecks project page",
+            icon: const Icon(Icons.open_in_browser)
+          ),
+          const Text("  "),
+        ],
       ),
       body: Center(
         child: Column(
@@ -292,6 +361,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 // fontFamily: "Consolas",
                 fontSize: 16,
               ),
+            ),
+            const Text(""),
+            OutlinedButton.icon(
+              onPressed: clearLog, 
+              icon: const Icon(Icons.clear), 
+              label: const Text("Clear log")
             ),
           ],
         ),
