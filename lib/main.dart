@@ -220,17 +220,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    const buttonPadding = MaterialStatePropertyAll(EdgeInsets.all(10));
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const Text("\n\n"),
             Text(psaText, textAlign: TextAlign.center,),
-            const Divider(thickness: 2, height: 50,),
+            const Text("\n\n"),
             Text(
               dirText, textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 20.0),
@@ -241,35 +242,44 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton(
+                OutlinedButton.icon(
                   onPressed: openFilePicker,
-                  child: const Text(
+                  icon: const Icon(Icons.folder),
+                  label: const Text(
                     "Locate...",
                     style: TextStyle(fontSize: 20.0),
                   ),
+                  style: const ButtonStyle(padding: buttonPadding),
                 ),
-                OutlinedButton(
+                const Text("    "),
+                OutlinedButton.icon(
                   onPressed: startInstall,
-                  child: const Text(
+                  icon: const Icon(Icons.download),
+                  label: const Text(
                     "Install",
                     style: TextStyle(fontSize: 20.0),
                   ),
+                  style: const ButtonStyle(padding: buttonPadding),
                 ),
-                const Text(""),
-                OutlinedButton(
+                const Text("    "),
+                OutlinedButton.icon(
                   onPressed: uninstallBepinex,
-                  child: const Text(
+                  icon: const Icon(Icons.delete),
+                  label: const Text(
                     "Uninstall",
                     style: TextStyle(fontSize: 20.0),
                   ),
+                  style: const ButtonStyle(padding: buttonPadding),
                 ),
-                const Text(""),
-                OutlinedButton(
+                const Text("    "),
+                OutlinedButton.icon(
                   onPressed: launchGameViaSteam,
-                  child: const Text(
-                    "Open",
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: const Text(
+                    "Launch",
                     style: TextStyle(fontSize: 20.0),
                   ),
+                  style: const ButtonStyle(padding: buttonPadding),
                 ),
               ],),
               const Divider(thickness: 2, height: 50,),
