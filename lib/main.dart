@@ -54,7 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String logText = "";
   String targetVersion = "latest";
   String psaText =
-      "Info: BepInHecks only works with the Steam/Epic versions of the games, and the launch button only works with Steam\nPut mod DLL files in: [game folder]/BepInEx/plugins";
+      "Info: BepInHecks only works with the Steam/Epic versions of the games, and the launch button only works with Steam\nPut mod DLL files in: [game folder]/BepInHecks/plugins";
 
   Future<void> copyPath(String from, String to) async {
     await Directory(to).create(recursive: true);
@@ -68,6 +68,11 @@ class _MyHomePageState extends State<MyHomePage> {
         await Link(copyTo).create(await file.target(), recursive: true);
       }
     }
+  }
+
+  String getTempSubfolder(String name) {
+    String tempPath = Directory.systemTemp.path;
+    return p.join(tempPath, "bih_installer", name);
   }
 
   bool validateInstallLoc(String path) {
@@ -86,11 +91,11 @@ class _MyHomePageState extends State<MyHomePage> {
         installLoc = selectedDirectory;
         addLog("Install valid!");
       } else {
-        installLoc = "invalid";
-        addLog("Install invalid!");
+        installLoc = "unselected";
+        addLog("Install invalid! Please try again.");
       }
     }
-    changeText();
+    updateInstallLocText();
   }
 
   Future<void> pullLatestReleaseGH(String repo, String outDir,
@@ -109,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
     String jsonText = response.body;
     final json = jsonDecode(jsonText);
     String releaseAssetUrl = json["assets"][0]["browser_download_url"];
-    addLog("Asset download: $releaseAssetUrl");
+    addLog("Downloading asset from github");
 
     Http.Response assetRaw = await Http.get(Uri.parse(releaseAssetUrl));
     final dlBytes = assetRaw.bodyBytes;
@@ -131,22 +136,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> backupPlugins() async {
-    String pluginsDir = "$installLoc/BepInEx/plugins";
-    Directory plugins = Directory(pluginsDir);
-    Directory backup = Directory("plugins_backup");
-
-    await copyPath(plugins.path, backup.path);
+    String pluginsDir = "$installLoc/BepInHecks/plugins";
+    String backupPath = getTempSubfolder("PluginsBackup");
+    await copyPath(pluginsDir, backupPath);
   }
 
   Future<bool> isBepinexPresent() {
-    String bepinexDir;
-    if (Platform.isWindows) {
-      bepinexDir = "$installLoc\\BepInEx";
-    } else {
-      bepinexDir = "$installLoc/BepInEx";
-    }
-
-    return Directory(bepinexDir).exists();
+    String proxyPath = p.join(installLoc, "winhttp.dll");
+    return File(proxyPath).exists();
   }
 
   Future<void> uninstallBepinex() async {
@@ -157,41 +154,34 @@ class _MyHomePageState extends State<MyHomePage> {
       await Process.run("sh", ["$installLoc/UninstallBepinhecks.sh"],
           workingDirectory: installLoc);
     }
+    addLog("Successfully uninstalled BepInHecks");
   }
 
   Future<void> restorePlugins() async {
-    addLog("Restoring plugins");
-    String pluginsDir = "$installLoc/BepInEx/plugins";
-    Directory plugins = Directory(pluginsDir);
-    Directory backup = Directory("plugins_backup");
-
-    await copyPath(backup.path, plugins.path);
-  }
-
-  Future<void> clearGeneratedFolders(String dlDir, String pluginbacDir) async {
-    Directory downloadDir = Directory(dlDir);
-    Directory plbacDir = Directory(pluginbacDir);
-    if (downloadDir.existsSync()) {
-      downloadDir.deleteSync(recursive: true);
-    }
-    if (plbacDir.existsSync()) {
-      plbacDir.deleteSync(recursive: true);
-    }
+    String pluginsDir = "$installLoc/BepInHecks/plugins";
+    String backupPath = getTempSubfolder("PluginsBackup");
+    await copyPath(backupPath, pluginsDir);
+    addLog("Restored plugins folder");
   }
 
   void startInstall() async {
     clearLog();
+
+    if(installLoc == "unselected") {
+      addLog("You need to select the game install path! Click the locate button above");
+      return;
+    }
+
     addLog("Starting BepInHecks Install");
-    await clearGeneratedFolders("bepinhecks_zip", "plugins_backup");
-    await pullLatestReleaseGH("cobwebsh/BepInHecks", "bepinhecks_zip");
+    await pullLatestReleaseGH("cobwebsh/BepInHecks", getTempSubfolder("ZipDownload"));
     bool bepinexInstalled = await isBepinexPresent();
     if (bepinexInstalled) {
-      addLog("BepInEx detected! Backing up plugins folder");
+      addLog("Pre-existing BepInHecks detected! Backing up plugins folder");
       await backupPlugins();
-      addLog("Uninstalling old version of bepinex");
+      addLog("Uninstalling old version");
       await uninstallBepinex();
     }
-    await copyPath("bepinhecks_zip", installLoc);
+    await copyPath(getTempSubfolder("ZipDownload"), installLoc);
     if (bepinexInstalled) {
       await restorePlugins();
     }
@@ -199,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
     addLog("Click the button to launch the game");
   }
 
-  void changeText() {
+  void updateInstallLocText() {
     setState(() {
       dirText = "SpiderHeck install: $installLoc";
     });
@@ -216,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> openGameFolder() async {
+  Future<void> launchGameViaSteam() async {
     addLog("Starting game...");
     final Uri steamUri = Uri.parse("steam://rungameid/1329500");
     if (!await launchUrl(steamUri)) {
@@ -237,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          children: [
             const Text("\n\n"),
             Text(psaText, textAlign: TextAlign.center,),
             const Divider(thickness: 2, height: 50,),
@@ -248,7 +238,9 @@ class _MyHomePageState extends State<MyHomePage> {
             const Divider(thickness: 2, height: 50,),
             
 
-            Column(children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 OutlinedButton(
                   onPressed: openFilePicker,
                   child: const Text(
@@ -256,7 +248,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: TextStyle(fontSize: 20.0),
                   ),
                 ),
-                const Text(""),
                 OutlinedButton(
                   onPressed: startInstall,
                   child: const Text(
@@ -274,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const Text(""),
                 OutlinedButton(
-                  onPressed: openGameFolder,
+                  onPressed: launchGameViaSteam,
                   child: const Text(
                     "Open",
                     style: TextStyle(fontSize: 20.0),
